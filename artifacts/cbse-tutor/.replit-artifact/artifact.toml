@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "CBSE Study Guide"
+version = "1.0.0"
+id = "artifacts/cbse-tutor"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18376
+
+[services.development]
+run = "pnpm --filter @workspace/cbse-tutor run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cbse-tutor", "run", "build" ]
+publicDir = "artifacts/cbse-tutor/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18376"
+BASE_PATH = "/"

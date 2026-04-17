@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CBSE Study Guide API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: cbse
+    description: CBSE curriculum operations
+  - name: openai
+    description: OpenAI AI chat and tutor operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,223 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /cbse/subjects:
+    get:
+      operationId: listSubjects
+      tags: [cbse]
+      summary: List all CBSE subjects
+      parameters:
+        - name: grade
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+  /cbse/subjects/{subjectId}/chapters:
+    get:
+      operationId: listChapters
+      tags: [cbse]
+      summary: List chapters for a subject
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chapter"
+  /cbse/chapters/{chapterId}:
+    get:
+      operationId: getChapter
+      tags: [cbse]
+      summary: Get chapter details with key concepts
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /cbse/chapters/{chapterId}/questions:
+    get:
+      operationId: listPracticeQuestions
+      tags: [cbse]
+      summary: List practice questions for a chapter
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: difficulty
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+      responses:
+        "200":
+          description: List of practice questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PracticeQuestion"
+  /cbse/dashboard:
+    get:
+      operationId: getDashboard
+      tags: [cbse]
+      summary: Get dashboard summary with subject counts and recent activity
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpenaiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
 components:
   schemas:
     HealthStatus:
@@ -33,4 +254,236 @@ components:
           type: string
       required:
         - status
-
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: integer
+        description:
+          type: string
+        icon:
+          type: string
+        chapterCount:
+          type: integer
+        color:
+          type: string
+      required:
+        - id
+        - name
+        - grade
+        - description
+        - icon
+        - chapterCount
+        - color
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+        subjectId:
+          type: integer
+        title:
+          type: string
+        chapterNumber:
+          type: integer
+        summary:
+          type: string
+        questionCount:
+          type: integer
+      required:
+        - id
+        - subjectId
+        - title
+        - chapterNumber
+        - summary
+        - questionCount
+    KeyConcept:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        explanation:
+          type: string
+      required:
+        - id
+        - title
+        - explanation
+    ChapterDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        subjectId:
+          type: integer
+        title:
+          type: string
+        chapterNumber:
+          type: integer
+        summary:
+          type: string
+        keyConcepts:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyConcept"
+        questionCount:
+          type: integer
+      required:
+        - id
+        - subjectId
+        - title
+        - chapterNumber
+        - summary
+        - keyConcepts
+        - questionCount
+    PracticeQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapterId:
+          type: integer
+        question:
+          type: string
+        difficulty:
+          type: string
+        type:
+          type: string
+        options:
+          type: ["array", "null"]
+          items:
+            type: string
+        answer:
+          type: string
+        explanation:
+          type: string
+      required:
+        - id
+        - chapterId
+        - question
+        - difficulty
+        - type
+        - answer
+        - explanation
+    GradeSummary:
+      type: object
+      properties:
+        grade:
+          type: integer
+        subjectCount:
+          type: integer
+        totalChapters:
+          type: integer
+      required:
+        - grade
+        - subjectCount
+        - totalChapters
+    Dashboard:
+      type: object
+      properties:
+        totalSubjects:
+          type: integer
+        totalChapters:
+          type: integer
+        totalQuestions:
+          type: integer
+        gradeSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/GradeSummary"
+        recentChapters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Chapter"
+      required:
+        - totalSubjects
+        - totalChapters
+        - totalQuestions
+        - gradeSummaries
+        - recentChapters
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+    CreateOpenaiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    SendOpenaiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
