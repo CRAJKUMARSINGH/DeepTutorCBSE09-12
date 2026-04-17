@@ -74,6 +74,15 @@ export interface Dashboard {
   recentChapters: Chapter[];
 }
 
+export interface ProgressResponse {
+  completedChapterIds: number[];
+}
+
+export interface MarkProgressBody {
+  sessionId: string;
+  chapterId: number;
+}
+
 export interface OpenaiConversation {
   id: number;
   title: string;
@@ -123,3 +132,11 @@ export const ListPracticeQuestionsDifficulty = {
   medium: "medium",
   hard: "hard",
 } as const;
+
+export type GetProgressParams = {
+  sessionId: string;
+};
+
+export type UnmarkChapterCompleteParams = {
+  sessionId: string;
+};

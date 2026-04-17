@@ -125,6 +125,40 @@ export const GetDashboardResponse = zod.object({
 });
 
 /**
+ * @summary Get completed chapter IDs for a session
+ */
+export const GetProgressQueryParams = zod.object({
+  sessionId: zod.coerce.string(),
+});
+
+export const GetProgressResponse = zod.object({
+  completedChapterIds: zod.array(zod.number()),
+});
+
+/**
+ * @summary Mark a chapter as complete
+ */
+export const MarkChapterCompleteBody = zod.object({
+  sessionId: zod.string(),
+  chapterId: zod.number(),
+});
+
+/**
+ * @summary Remove completion mark from a chapter
+ */
+export const UnmarkChapterCompleteParams = zod.object({
+  chapterId: zod.coerce.number(),
+});
+
+export const UnmarkChapterCompleteQueryParams = zod.object({
+  sessionId: zod.coerce.string(),
+});
+
+export const UnmarkChapterCompleteResponse = zod.object({
+  completedChapterIds: zod.array(zod.number()),
+});
+
+/**
  * @summary List all conversations
  */
 export const ListOpenaiConversationsResponseItem = zod.object({

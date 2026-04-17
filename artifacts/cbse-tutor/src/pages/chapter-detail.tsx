@@ -1,12 +1,13 @@
 import { Link, useParams } from "wouter";
 import { useGetChapter } from "@workspace/api-client-react";
-import { ChevronLeft, BookOpen, CheckCircle, MessageSquare, Lightbulb, BrainCircuit, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, MessageSquare, BrainCircuit, Target, CheckCircle2, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState } from "@/components/loading";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
+import { useProgress } from "@/hooks/useProgress";
 
 export default function ChapterDetail() {
   const params = useParams();
@@ -15,6 +16,10 @@ export default function ChapterDetail() {
   const { data: chapter, isLoading, isError } = useGetChapter(chapterId, {
     query: { enabled: !!chapterId }
   });
+
+  const { completedIds, toggleComplete, isMarkingComplete, isUnmarking } = useProgress();
+  const isCompleted = completedIds.has(chapterId);
+  const isToggling = isMarkingComplete || isUnmarking;
 
   if (isLoading) return <LoadingState text="Loading chapter..." />;
   if (isError || !chapter) return <div className="text-center p-12 text-destructive">Failed to load chapter.</div>;
@@ -36,6 +41,18 @@ export default function ChapterDetail() {
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{chapter.title}</h1>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+            <Button
+              variant={isCompleted ? "default" : "outline"}
+              className={`w-full sm:w-auto gap-2 transition-all ${isCompleted ? "bg-green-600 hover:bg-green-700 text-white border-green-600" : "border-green-600 text-green-700 hover:bg-green-50"}`}
+              onClick={() => toggleComplete(chapterId)}
+              disabled={isToggling}
+            >
+              {isCompleted ? (
+                <><CheckCircle2 className="h-4 w-4" /> Completed</>
+              ) : (
+                <><Circle className="h-4 w-4" /> Mark Complete</>
+              )}
+            </Button>
             <Link href="/tutor">
               <Button variant="secondary" className="w-full sm:w-auto gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
                 <MessageSquare className="h-4 w-4" /> Ask AI Tutor
@@ -48,6 +65,13 @@ export default function ChapterDetail() {
             </Link>
           </div>
         </div>
+
+        {isCompleted && (
+          <div className="mb-6 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-5 py-3 text-green-700 font-medium">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+            You have marked this chapter as complete. Great work!
+          </div>
+        )}
 
         <div className="prose prose-blue max-w-none">
           <div className="bg-muted/30 p-6 rounded-2xl text-lg leading-relaxed text-foreground border border-muted">

@@ -130,6 +130,64 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Dashboard"
+  /cbse/progress:
+    get:
+      operationId: getProgress
+      tags: [cbse]
+      summary: Get completed chapter IDs for a session
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of completed chapter IDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressResponse"
+    post:
+      operationId: markChapterComplete
+      tags: [cbse]
+      summary: Mark a chapter as complete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkProgressBody"
+      responses:
+        "201":
+          description: Marked complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressResponse"
+  /cbse/progress/{chapterId}:
+    delete:
+      operationId: unmarkChapterComplete
+      tags: [cbse]
+      summary: Remove completion mark from a chapter
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unmarked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressResponse"
   /openai/conversations:
     get:
       operationId: listOpenaiConversations
@@ -413,6 +471,25 @@ components:
         - totalQuestions
         - gradeSummaries
         - recentChapters
+    ProgressResponse:
+      type: object
+      properties:
+        completedChapterIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - completedChapterIds
+    MarkProgressBody:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        chapterId:
+          type: integer
+      required:
+        - sessionId
+        - chapterId
     OpenaiConversation:
       type: object
       properties:

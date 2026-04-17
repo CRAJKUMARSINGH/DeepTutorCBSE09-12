@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { eq, count, sql } from "drizzle-orm";
+import { eq, count, sql, and, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   subjectsTable,
   chaptersTable,
   keyConceptsTable,
   practiceQuestionsTable,
+  chapterProgressTable,
 } from "@workspace/db";
 import {
   ListSubjectsQueryParams,
@@ -18,6 +19,11 @@ import {
   ListPracticeQuestionsQueryParams,
   ListPracticeQuestionsResponse,
   GetDashboardResponse,
+  GetProgressQueryParams,
+  GetProgressResponse,
+  MarkChapterCompleteBody,
+  UnmarkChapterCompleteParams,
+  UnmarkChapterCompleteQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -209,6 +215,70 @@ router.get("/cbse/dashboard", async (_req, res): Promise<void> => {
       recentChapters,
     })
   );
+});
+
+router.get("/cbse/progress", async (req, res): Promise<void> => {
+  const query = GetProgressQueryParams.safeParse(req.query);
+  if (!query.success) {
+    res.status(400).json({ error: query.error.message });
+    return;
+  }
+
+  const rows = await db
+    .select({ chapterId: chapterProgressTable.chapterId })
+    .from(chapterProgressTable)
+    .where(eq(chapterProgressTable.sessionId, query.data.sessionId));
+
+  res.json(GetProgressResponse.parse({ completedChapterIds: rows.map(r => r.chapterId) }));
+});
+
+router.post("/cbse/progress", async (req, res): Promise<void> => {
+  const body = MarkChapterCompleteBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const { sessionId, chapterId } = body.data;
+
+  const existing = await db
+    .select()
+    .from(chapterProgressTable)
+    .where(and(eq(chapterProgressTable.sessionId, sessionId), eq(chapterProgressTable.chapterId, chapterId)));
+
+  if (existing.length === 0) {
+    await db.insert(chapterProgressTable).values({ sessionId, chapterId });
+  }
+
+  const rows = await db
+    .select({ chapterId: chapterProgressTable.chapterId })
+    .from(chapterProgressTable)
+    .where(eq(chapterProgressTable.sessionId, sessionId));
+
+  res.status(201).json(GetProgressResponse.parse({ completedChapterIds: rows.map(r => r.chapterId) }));
+});
+
+router.delete("/cbse/progress/:chapterId", async (req, res): Promise<void> => {
+  const params = UnmarkChapterCompleteParams.safeParse(req.params);
+  const queryParams = UnmarkChapterCompleteQueryParams.safeParse(req.query);
+  if (!params.success || !queryParams.success) {
+    res.status(400).json({ error: "Invalid parameters" });
+    return;
+  }
+
+  const { chapterId } = params.data;
+  const { sessionId } = queryParams.data;
+
+  await db
+    .delete(chapterProgressTable)
+    .where(and(eq(chapterProgressTable.sessionId, sessionId), eq(chapterProgressTable.chapterId, chapterId)));
+
+  const rows = await db
+    .select({ chapterId: chapterProgressTable.chapterId })
+    .from(chapterProgressTable)
+    .where(eq(chapterProgressTable.sessionId, sessionId));
+
+  res.json(GetProgressResponse.parse({ completedChapterIds: rows.map(r => r.chapterId) }));
 });
 
 export default router;

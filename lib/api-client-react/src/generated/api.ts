@@ -22,16 +22,20 @@ import type {
   ChapterDetail,
   CreateOpenaiConversationBody,
   Dashboard,
+  GetProgressParams,
   HealthStatus,
   ListPracticeQuestionsParams,
   ListSubjectsParams,
+  MarkProgressBody,
   OpenaiConversation,
   OpenaiConversationWithMessages,
   OpenaiError,
   OpenaiMessage,
   PracticeQuestion,
+  ProgressResponse,
   SendOpenaiMessageBody,
   Subject,
+  UnmarkChapterCompleteParams,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -582,6 +586,289 @@ export function useGetDashboard<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get completed chapter IDs for a session
+ */
+export const getGetProgressUrl = (params: GetProgressParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/cbse/progress?${stringifiedParams}`
+    : `/api/cbse/progress`;
+};
+
+export const getProgress = async (
+  params: GetProgressParams,
+  options?: RequestInit,
+): Promise<ProgressResponse> => {
+  return customFetch<ProgressResponse>(getGetProgressUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProgressQueryKey = (params?: GetProgressParams) => {
+  return [`/api/cbse/progress`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetProgressQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProgress>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetProgressParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProgress>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProgressQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProgress>>> = ({
+    signal,
+  }) => getProgress(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProgress>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProgressQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProgress>>
+>;
+export type GetProgressQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get completed chapter IDs for a session
+ */
+
+export function useGetProgress<
+  TData = Awaited<ReturnType<typeof getProgress>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetProgressParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProgress>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProgressQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark a chapter as complete
+ */
+export const getMarkChapterCompleteUrl = () => {
+  return `/api/cbse/progress`;
+};
+
+export const markChapterComplete = async (
+  markProgressBody: MarkProgressBody,
+  options?: RequestInit,
+): Promise<ProgressResponse> => {
+  return customFetch<ProgressResponse>(getMarkChapterCompleteUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(markProgressBody),
+  });
+};
+
+export const getMarkChapterCompleteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markChapterComplete>>,
+    TError,
+    { data: BodyType<MarkProgressBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markChapterComplete>>,
+  TError,
+  { data: BodyType<MarkProgressBody> },
+  TContext
+> => {
+  const mutationKey = ["markChapterComplete"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markChapterComplete>>,
+    { data: BodyType<MarkProgressBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return markChapterComplete(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkChapterCompleteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markChapterComplete>>
+>;
+export type MarkChapterCompleteMutationBody = BodyType<MarkProgressBody>;
+export type MarkChapterCompleteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a chapter as complete
+ */
+export const useMarkChapterComplete = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markChapterComplete>>,
+    TError,
+    { data: BodyType<MarkProgressBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markChapterComplete>>,
+  TError,
+  { data: BodyType<MarkProgressBody> },
+  TContext
+> => {
+  return useMutation(getMarkChapterCompleteMutationOptions(options));
+};
+
+/**
+ * @summary Remove completion mark from a chapter
+ */
+export const getUnmarkChapterCompleteUrl = (
+  chapterId: number,
+  params: UnmarkChapterCompleteParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/cbse/progress/${chapterId}?${stringifiedParams}`
+    : `/api/cbse/progress/${chapterId}`;
+};
+
+export const unmarkChapterComplete = async (
+  chapterId: number,
+  params: UnmarkChapterCompleteParams,
+  options?: RequestInit,
+): Promise<ProgressResponse> => {
+  return customFetch<ProgressResponse>(
+    getUnmarkChapterCompleteUrl(chapterId, params),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getUnmarkChapterCompleteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unmarkChapterComplete>>,
+    TError,
+    { chapterId: number; params: UnmarkChapterCompleteParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unmarkChapterComplete>>,
+  TError,
+  { chapterId: number; params: UnmarkChapterCompleteParams },
+  TContext
+> => {
+  const mutationKey = ["unmarkChapterComplete"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unmarkChapterComplete>>,
+    { chapterId: number; params: UnmarkChapterCompleteParams }
+  > = (props) => {
+    const { chapterId, params } = props ?? {};
+
+    return unmarkChapterComplete(chapterId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnmarkChapterCompleteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unmarkChapterComplete>>
+>;
+
+export type UnmarkChapterCompleteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove completion mark from a chapter
+ */
+export const useUnmarkChapterComplete = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unmarkChapterComplete>>,
+    TError,
+    { chapterId: number; params: UnmarkChapterCompleteParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof unmarkChapterComplete>>,
+  TError,
+  { chapterId: number; params: UnmarkChapterCompleteParams },
+  TContext
+> => {
+  return useMutation(getUnmarkChapterCompleteMutationOptions(options));
+};
 
 /**
  * @summary List all conversations

@@ -29,12 +29,14 @@ pnpm workspace monorepo using TypeScript.
 
 ## Features
 
-- Dashboard with subject counts, chapter counts, practice question totals
+- Dashboard with subject counts, chapter counts, practice question totals, and chapters-completed counter
 - Subject browser filtered by grade (9-12)
-- Chapter detail with key concepts and practice questions
+- Chapter detail with key concepts, practice questions, and Mark Complete button
+- Progress tracking: per-subject progress bar with checkmarks on completed chapters; session tracked via localStorage UUID stored in `chapter_progress` DB table
 - AI Tutor chat with SSE streaming responses, CBSE-specific system prompt
 - Practice questions (MCQ + short answer) with difficulty filter
 - Full conversation history for AI tutor sessions
+- Complete NCERT-aligned curriculum: 252 chapters across 16 subjects for Grades 9-12
 
 ## Key Files
 
@@ -60,6 +62,7 @@ pnpm workspace monorepo using TypeScript.
 - `practice_questions` — MCQ and short-answer questions with difficulty
 - `conversations` — AI tutor conversation threads
 - `messages` — messages within each conversation
+- `chapter_progress` — chapter completion records keyed by sessionId (UUID from localStorage)
 
 ## Important Notes
 
