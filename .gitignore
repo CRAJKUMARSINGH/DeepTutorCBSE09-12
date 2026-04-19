@@ -5,7 +5,8 @@
 # ============================================
 # User Generated Data and Outputs
 # ============================================
-data/
+# data/   # re-enabled: only runtime data dirs should be ignored, not source data
+
 run_code_workspace/
 deeptutor/agents/question/reference_papers/
 deeptutor/services/rag/eg_only_for_analysis/
