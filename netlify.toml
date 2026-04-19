@@ -1,0 +1,12 @@
+[build]
+  base = "artifacts/cbse-tutor"
+  command = "pnpm install && pnpm run build"
+  publish = "artifacts/cbse-tutor/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
