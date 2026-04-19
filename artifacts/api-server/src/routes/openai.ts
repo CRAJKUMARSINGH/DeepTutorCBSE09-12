@@ -17,6 +17,8 @@ import {
 
 const router: IRouter = Router();
 
+const IS_SANDBOX = !process.env.DATABASE_URL;
+
 const CBSE_SYSTEM_PROMPT = `You are a knowledgeable and encouraging CBSE tutor for students in grades 9-12. Your role is to help students understand concepts from the CBSE curriculum deeply, not just memorize them.
 
 Guidelines:
@@ -33,6 +35,11 @@ Guidelines:
 You are a trusted study companion — patient, thorough, and always on the student's side.`;
 
 router.get("/openai/conversations", async (_req, res): Promise<void> => {
+  if (IS_SANDBOX) {
+    res.json(ListOpenaiConversationsResponse.parse([]));
+    return;
+  }
+
   const conversations = await db
     .select()
     .from(conversationsTable)
@@ -141,7 +148,15 @@ router.post("/openai/conversations/:id/messages", async (req, res): Promise<void
     return;
   }
 
-  const history = await db
+  if (IS_SANDBOX) {
+      const history = await db
+        .select()
+        .from(messagesTable)
+        .where(eq(messagesTable.conversationId, params.data.id))
+        .orderBy(messagesTable.createdAt);
+  }
+  
+  const history = IS_SANDBOX ? [] : await db
     .select()
     .from(messagesTable)
     .where(eq(messagesTable.conversationId, params.data.id))
@@ -183,11 +198,13 @@ router.post("/openai/conversations/:id/messages", async (req, res): Promise<void
     }
   }
 
-  await db.insert(messagesTable).values({
-    conversationId: params.data.id,
-    role: "assistant",
-    content: fullResponse,
-  });
+  if (!IS_SANDBOX) {
+    await db.insert(messagesTable).values({
+      conversationId: params.data.id,
+      role: "assistant",
+      content: fullResponse,
+    });
+  }
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
   res.end();

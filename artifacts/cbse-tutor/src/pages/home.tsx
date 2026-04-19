@@ -1,10 +1,11 @@
 import { Link } from "wouter";
-import { useGetDashboard } from "@workspace/api-client-react";
-import { BookOpen, FileText, CheckCircle2, ArrowRight, BookMarked, Activity, ChevronRight, Trophy } from "lucide-react";
+import { useGetDashboard, useGetContentStats } from "@workspace/api-client-react";
+import { BookOpen, FileText, CheckCircle2, ArrowRight, BookMarked, Activity, ChevronRight, Trophy, Sparkles, LayoutPanelLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState } from "@/components/loading";
+import { Progress } from "@/components/ui/progress";
 import { useProgress } from "@/hooks/useProgress";
 
 const GRADE_COLORS: Record<number, string> = {
@@ -93,6 +94,9 @@ export default function Home() {
         </Card>
       </section>
 
+      {/* Content Generation Progress (Developer/Pilot View) */}
+      <ContentStatsWidget />
+
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -160,7 +164,35 @@ export default function Home() {
         )}
       </section>
 
-      <section className="space-y-4 pt-4">
+      <section className="bg-gradient-to-r from-primary to-secondary rounded-3xl p-10 text-white shadow-xl overflow-hidden relative group">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-bold mb-4 flex items-center gap-3">
+            <Trophy className="h-8 w-8" /> 
+            Zeal & Dedication
+          </h2>
+          <p className="text-white/80 text-lg max-w-2xl mb-6">
+            Our mission is to empower every CBSE student with premium, agent-native learning tools. 
+            From deep-reasoning AI tutors to interactive visualizations, we are committed to your academic excellence.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20">
+              <span className="block text-2xl font-bold">100%</span>
+              <span className="text-sm opacity-80">NCERT Alignment</span>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20">
+              <span className="block text-2xl font-bold">Agentic</span>
+              <span className="text-sm opacity-80">Reasoning Engine</span>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20">
+              <span className="block text-2xl font-bold">Zero</span>
+              <span className="text-sm opacity-80">Shortcuts Taken</span>
+            </div>
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+      </section>
+
+      <section className="space-y-4 pt-4 pb-12">
         <h2 className="text-2xl font-bold tracking-tight">Browse by Grade</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {dashboard.gradeSummaries.map((summary) => {
@@ -188,5 +220,52 @@ export default function Home() {
         </div>
       </section>
     </div>
+  );
+}
+
+function ContentStatsWidget() {
+  const { data: stats, isLoading } = useGetContentStats();
+  
+  if (isLoading || !stats) return null;
+
+  return (
+    <Card className="bg-white shadow-sm border overflow-hidden mt-8 mb-8">
+      <CardHeader className="bg-muted/30 border-b py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <LayoutPanelLeft className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base font-bold">Curriculum Coverage Engine</CardTitle>
+          </div>
+          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+            Week 2: Pilot Run
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Lesson Studies Generated</p>
+                <p className="text-2xl font-bold">{stats.chaptersWithLesson} <span className="text-sm font-normal text-muted-foreground">/ {stats.totalChapters}</span></p>
+              </div>
+              <span className="text-sm font-bold text-primary">{Math.round(stats.coveragePercent || 0)}%</span>
+            </div>
+            <Progress value={stats.coveragePercent || 0} className="h-2" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-muted/10 rounded-xl p-4 border border-muted">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Questions</p>
+              <p className="text-xl font-bold text-accent">{stats.totalQuestions}</p>
+            </div>
+            <div className="bg-muted/10 rounded-xl p-4 border border-muted">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Active Pilot</p>
+              <p className="text-xl font-bold text-green-600">{stats.chaptersWithQuestions} Chapters</p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

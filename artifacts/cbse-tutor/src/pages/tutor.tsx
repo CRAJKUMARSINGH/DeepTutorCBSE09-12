@@ -25,7 +25,7 @@ export default function Tutor() {
   const { data: conversations, isLoading: isLoadingList } = useListOpenaiConversations();
   const { data: activeConversation, isLoading: isLoadingChat } = useGetOpenaiConversation(
     activeConversationId as number,
-    { query: { enabled: !!activeConversationId } }
+    { query: { enabled: !!activeConversationId } as any }
   );
 
   const createChat = useCreateOpenaiConversation();

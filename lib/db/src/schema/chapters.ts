@@ -9,6 +9,9 @@ export const chaptersTable = pgTable("chapters", {
   title: text("title").notNull(),
   chapterNumber: integer("chapter_number").notNull(),
   summary: text("summary").notNull(),
+  lessonStudy: text("lesson_study"),
+  conceptsJson: text("concepts_json"),
+  visualsJson: text("visuals_json"),
 });
 
 export const insertChapterSchema = createInsertSchema(chaptersTable).omit({ id: true });

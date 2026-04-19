@@ -118,6 +118,32 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PracticeQuestion"
+  /cbse/chapters/{chapterId}/videos:
+    get:
+      operationId: listChapterVideos
+      tags: [cbse]
+      summary: List videos for a chapter
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of chapter videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChapterVideo"
+        "400":
+          description: Invalid chapterId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /cbse/dashboard:
     get:
       operationId: getDashboard
@@ -130,6 +156,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Dashboard"
+  /cbse/content-stats:
+    get:
+      operationId: getContentStats
+      tags: [cbse]
+      summary: Get content generation statistics
+      responses:
+        "200":
+          description: Content statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentStats"
   /cbse/progress:
     get:
       operationId: getProgress
@@ -357,6 +395,10 @@ components:
           type: integer
         summary:
           type: string
+        lessonStudy:
+          type: ["string", "null"]
+        conceptsJson:
+          type: ["string", "null"]
         questionCount:
           type: integer
       required:
@@ -392,12 +434,24 @@ components:
           type: integer
         summary:
           type: string
+        lessonStudy:
+          type: ["string", "null"]
+        conceptsJson:
+          type: ["string", "null"]
         keyConcepts:
           type: array
           items:
             $ref: "#/components/schemas/KeyConcept"
         questionCount:
           type: integer
+        visuals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Visual"
+        videos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChapterVideo"
       required:
         - id
         - subjectId
@@ -406,6 +460,44 @@ components:
         - summary
         - keyConcepts
         - questionCount
+        - videos
+    Visual:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [geogebra, manim]
+        id:
+          type: string
+        title:
+          type: string
+        thumbnail:
+          type: string
+      required:
+        - type
+        - id
+        - title
+    ChapterVideo:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapterId:
+          type: integer
+        youtubeVideoId:
+          type: string
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        displayOrder:
+          type: integer
+      required:
+        - id
+        - chapterId
+        - youtubeVideoId
+        - title
+        - displayOrder
     PracticeQuestion:
       type: object
       properties:
@@ -427,6 +519,10 @@ components:
           type: string
         explanation:
           type: string
+        hint:
+          type: ["string", "null"]
+        stepByStepSolution:
+          type: ["string", "null"]
       required:
         - id
         - chapterId
@@ -480,6 +576,30 @@ components:
             type: integer
       required:
         - completedChapterIds
+    ContentStats:
+      type: object
+      properties:
+        totalChapters:
+          type: integer
+        chaptersWithLesson:
+          type: integer
+        chaptersWithQuestions:
+          type: integer
+        totalQuestions:
+          type: integer
+        coveragePercent:
+          type: [number, "null"]
+        chaptersWithVideos:
+          type: integer
+        totalVideos:
+          type: integer
+      required:
+        - totalChapters
+        - chaptersWithLesson
+        - chaptersWithQuestions
+        - totalQuestions
+        - chaptersWithVideos
+        - totalVideos
     MarkProgressBody:
       type: object
       properties:

@@ -15,7 +15,7 @@ export default function SubjectDetail() {
 
   const { data: subjects, isLoading: isLoadingSubjects } = useListSubjects();
   const { data: chapters, isLoading: isLoadingChapters, isError } = useListChapters(subjectId, {
-    query: { enabled: !!subjectId }
+    query: { enabled: !!subjectId } as any
   });
   const { completedIds, toggleComplete } = useProgress();
 
@@ -41,13 +41,8 @@ export default function SubjectDetail() {
           style={{ backgroundColor: subject.color || 'var(--primary)' }}
         />
         
-        <div className="flex items-start gap-6 relative z-10">
-          <div 
-            className="w-20 h-20 rounded-2xl flex items-center justify-center text-white shadow-md shrink-0"
-            style={{ backgroundColor: subject.color || 'hsl(var(--primary))' }}
-          >
-            <SubjectIcon name={subject.icon} className="h-10 w-10" />
-          </div>
+        <div className="flex items-start gap-8 relative z-10">
+          <SubjectIcon name={subject.icon} className="h-20 w-20" />
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <h1 className="text-4xl font-bold tracking-tight">{subject.name}</h1>

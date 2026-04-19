@@ -61,12 +61,7 @@ export default function Subjects() {
               <Card className="h-full flex flex-col hover-elevate transition-all duration-300 cursor-pointer border-t-4" style={{ borderTopColor: subject.color || 'hsl(var(--primary))' }}>
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start mb-4">
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
-                      style={{ backgroundColor: subject.color || 'hsl(var(--primary))' }}
-                    >
-                      <SubjectIcon name={subject.icon} className="h-6 w-6" />
-                    </div>
+                    <SubjectIcon name={subject.icon} className="h-12 w-12" />
                     <Badge variant="secondary" className="font-semibold bg-secondary/10 text-secondary-foreground border-secondary/20">
                       Grade {subject.grade}
                     </Badge>

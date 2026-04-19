@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { useGetChapter, useListPracticeQuestions } from "@workspace/api-client-react";
-import { ChevronLeft, ChevronRight, CheckCircle, HelpCircle, ArrowRight, Check, X, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, HelpCircle, ArrowRight, Check, X, Target, Lightbulb, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { LoadingState } from "@/components/loading";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 
 export default function Practice() {
   const params = useParams();
@@ -16,15 +17,17 @@ export default function Practice() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({});
+  const [showHint, setShowHint] = useState<Record<number, boolean>>({});
+  const [showStepByStep, setShowStepByStep] = useState<Record<number, boolean>>({});
 
   const { data: chapter, isLoading: isChapterLoading } = useGetChapter(chapterId, {
-    query: { enabled: !!chapterId }
+    query: { enabled: !!chapterId } as any
   });
 
   const { data: questions, isLoading: isQuestionsLoading } = useListPracticeQuestions(
     chapterId, 
     difficulty !== "all" ? { difficulty: difficulty as any } : undefined,
-    { query: { enabled: !!chapterId } }
+    { query: { enabled: !!chapterId } as any }
   );
 
   // Reset state when difficulty changes
@@ -32,6 +35,8 @@ export default function Practice() {
     setCurrentIndex(0);
     setRevealed({});
     setSelectedOptions({});
+    setShowHint({});
+    setShowStepByStep({});
   }, [difficulty]);
 
   if (isChapterLoading || isQuestionsLoading) return <LoadingState text="Preparing your practice session..." />;
@@ -184,26 +189,37 @@ export default function Practice() {
                   })}
                 </div>
               )}
-
               {revealed[currentQuestion.id] ? (
-                <div className="mt-8 bg-muted/30 p-6 rounded-2xl border animate-in fade-in zoom-in-95 duration-300">
-                  <h4 className="font-bold text-primary flex items-center gap-2 mb-3">
-                    <CheckCircle className="h-5 w-5" /> 
-                    {currentQuestion.type === 'mcq' ? 'Explanation' : 'Answer & Explanation'}
-                  </h4>
-                  
-                  {currentQuestion.type !== 'mcq' && (
-                    <div className="mb-4 p-4 bg-white rounded-xl border font-medium text-lg">
-                      {currentQuestion.answer}
-                    </div>
-                  )}
-                  
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center gap-2 text-primary font-semibold border-b pb-2">
+                    <CheckCircle className="h-5 w-5" /> Explanation
+                  </div>
                   <p className="text-muted-foreground leading-relaxed">
                     {currentQuestion.explanation}
                   </p>
+
+                  {(currentQuestion as any).stepByStepSolution && (
+                    <div className="mt-6 border-t pt-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary hover:text-primary/80 gap-2 p-0"
+                        onClick={() => setShowStepByStep(prev => ({ ...prev, [currentQuestion.id]: !prev[currentQuestion.id] }))}
+                      >
+                        <ListChecks className="h-4 w-4" /> 
+                        {showStepByStep[currentQuestion.id] ? "Hide Step-by-Step Solution" : "View Step-by-Step Solution"}
+                      </Button>
+                      
+                      {showStepByStep[currentQuestion.id] && (
+                        <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10 animate-in slide-in-from-top-2 duration-300">
+                          <MarkdownRenderer content={(currentQuestion as any).stepByStepSolution} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="pt-6 flex justify-center">
+                <div className="pt-6 flex flex-col items-center gap-4">
                   <Button 
                     size="lg" 
                     className="w-full sm:w-auto px-12"
@@ -212,6 +228,26 @@ export default function Practice() {
                   >
                     Reveal Answer
                   </Button>
+                  
+                  {(currentQuestion as any).hint && (
+                    <div className="w-full flex flex-col items-center">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-2"
+                        onClick={() => setShowHint(prev => ({ ...prev, [currentQuestion.id]: !prev[currentQuestion.id] }))}
+                      >
+                        <Lightbulb className="h-4 w-4" /> 
+                        {showHint[currentQuestion.id] ? "Hide Hint" : "Stuck? Get a Hint"}
+                      </Button>
+                      
+                      {showHint[currentQuestion.id] && (
+                        <div className="mt-3 p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-sm max-w-md animate-in fade-in zoom-in-95 duration-200">
+                          {(currentQuestion as any).hint}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

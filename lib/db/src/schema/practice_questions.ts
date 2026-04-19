@@ -12,6 +12,8 @@ export const practiceQuestionsTable = pgTable("practice_questions", {
   options: text("options").array(),
   answer: text("answer").notNull(),
   explanation: text("explanation").notNull(),
+  hint: text("hint"),
+  stepByStepSolution: text("step_by_step_solution"),
 });
 
 export const insertPracticeQuestionSchema = createInsertSchema(practiceQuestionsTable).omit({ id: true });

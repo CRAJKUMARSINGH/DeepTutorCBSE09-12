@@ -5,3 +5,4 @@ export * from "./practice_questions";
 export * from "./conversations";
 export * from "./messages";
 export * from "./chapter_progress";
+export * from "./chapter_videos";

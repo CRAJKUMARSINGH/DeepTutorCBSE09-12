@@ -10,7 +10,10 @@
   },
   "private": true,
   "devDependencies": {
-    "typescript": "~5.9.2",
-    "prettier": "^3.8.1"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "prettier": "^3.8.1",
+    "react": "catalog:",
+    "typescript": "~5.9.2"
   }
 }

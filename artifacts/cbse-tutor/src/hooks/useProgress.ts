@@ -19,7 +19,7 @@ export function useProgress() {
 
   const { data, isLoading } = useGetProgress(
     { sessionId },
-    { query: { staleTime: 0 } }
+    { query: { staleTime: 0 } as any }
   );
 
   const completedIds = new Set<number>(data?.completedChapterIds ?? []);
