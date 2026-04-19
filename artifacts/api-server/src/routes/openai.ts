@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { resolveChapter } from "../data/cbse-syllabus";
 import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { conversations as conversationsTable, messages as messagesTable } from "@workspace/db";
@@ -173,8 +174,25 @@ router.post("/openai/conversations/:id/messages", async (req, res): Promise<void
     content: body.data.content,
   });
 
+  // Auto-detect class/subject/chapter from message and inject syllabus context
+  const msg = body.data.content;
+  const gradeMatch = msg.match(/class\s*(9|10|11|12)|grade\s*(9|10|11|12)/i);
+  const chapterMatch = msg.match(/chapter\s*(\d+)/i);
+  const subjectMatch = msg.match(/\b(science|maths|math|mathematics|physics|chemistry|biology|english|hindi|social science|history|geography|civics|economics)\b/i);
+
+  let syllabusContext = "";
+  if (gradeMatch && chapterMatch && subjectMatch) {
+    const grade = parseInt(gradeMatch[1] || gradeMatch[2]);
+    const chapter = parseInt(chapterMatch[1]);
+    const subject = subjectMatch[1].toLowerCase().replace(/^math$/, "maths").replace(/^mathematics$/, "maths");
+    const chapterName = resolveChapter(grade, subject, chapter);
+    if (chapterName) {
+      syllabusContext = `\n\n[CONTEXT: Student is asking about Class ${grade} ${subject.charAt(0).toUpperCase() + subject.slice(1)}, Chapter ${chapter}: "${chapterName}". Teach this chapter thoroughly.]`;
+    }
+  }
+
   const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: CBSE_SYSTEM_PROMPT },
+    { role: "system", content: CBSE_SYSTEM_PROMPT + syllabusContext },
     ...history.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
