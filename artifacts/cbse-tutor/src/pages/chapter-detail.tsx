@@ -64,7 +64,7 @@ export default function ChapterDetail() {
                 <><Circle className="h-4 w-4" /> Mark Complete</>
               )}
             </Button>
-            <Link href="/tutor">
+            <Link href={`/?chapter=${encodeURIComponent(chapter.title)}&grade=${chapter.grade ?? ""}&subject=${encodeURIComponent(chapter.subjectName ?? "")}`}>
               <Button variant="secondary" className="w-full sm:w-auto gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
                 <MessageSquare className="h-4 w-4" /> Ask AI Tutor
               </Button>
@@ -184,7 +184,31 @@ export default function ChapterDetail() {
         </Tabs>
       </div>
 
-      <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left mt-12">
+      <div className="bg-secondary/5 rounded-3xl p-8 border border-secondary/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left mt-4">
+        <div>
+          <h3 className="text-xl font-bold mb-2">Need help with this chapter?</h3>
+          <p className="text-muted-foreground">Ask DeepTutor to explain concepts, generate revision notes, or quiz you.</p>
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center md:justify-end">
+          <Link href={`/?chapter=${encodeURIComponent(chapter.title)}&subject=${encodeURIComponent(chapter.subjectName ?? "")}`}>
+            <Button variant="outline" className="gap-2 border-secondary text-secondary hover:bg-secondary/10">
+              <MessageSquare className="h-4 w-4" /> Explain this chapter
+            </Button>
+          </Link>
+          <Link href={`/?chapter=${encodeURIComponent(chapter.title)}&subject=${encodeURIComponent(chapter.subjectName ?? "")}&q=${encodeURIComponent("Give me revision notes for this chapter")}`}>
+            <Button variant="outline" className="gap-2 border-secondary text-secondary hover:bg-secondary/10">
+              <Sparkles className="h-4 w-4" /> Revision notes
+            </Button>
+          </Link>
+          <Link href={`/?chapter=${encodeURIComponent(chapter.title)}&subject=${encodeURIComponent(chapter.subjectName ?? "")}&q=${encodeURIComponent("Quiz me on this chapter with 5 MCQs")}`}>
+            <Button variant="secondary" className="gap-2">
+              <BrainCircuit className="h-4 w-4" /> Quiz me
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left mt-4">
         <div>
           <h3 className="text-xl font-bold mb-2">Ready to test your knowledge?</h3>
           <p className="text-muted-foreground">Practice questions are tailored to this chapter's concepts.</p>

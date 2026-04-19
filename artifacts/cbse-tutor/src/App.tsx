@@ -26,11 +26,11 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={Tutor} />
+        <Route path="/dashboard" component={Home} />
         <Route path="/subjects" component={Subjects} />
         <Route path="/subjects/:subjectId" component={SubjectDetail} />
         <Route path="/chapters/:chapterId" component={ChapterDetail} />
-        <Route path="/tutor" component={Tutor} />
         <Route path="/practice/:chapterId" component={Practice} />
         <Route component={NotFound} />
       </Switch>

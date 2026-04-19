@@ -1,26 +1,56 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { 
   useListOpenaiConversations, 
   useCreateOpenaiConversation, 
   useGetOpenaiConversation,
-  useDeleteOpenaiConversation 
+  useDeleteOpenaiConversation,
+  useListSubjects,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Plus, Send, Bot, User, Trash2, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { MessageSquare, Plus, Send, Bot, User, Trash2, Loader2, Sparkles, AlertCircle, BookOpen, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+
+const GRADES = [9, 10, 11, 12];
+
+const QUICK_PROMPTS = [
+  "Explain this chapter",
+  "Give me a short summary",
+  "Ask me 5 MCQs",
+  "Solve step by step",
+  "Prepare me for exam",
+];
 
 export default function Tutor() {
   const queryClient = useQueryClient();
+  const [location] = useLocation();
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedResponse, setStreamedResponse] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState<string>("");
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [selectedChapter, setSelectedChapter] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill chapter from navigation state (e.g. from chapter detail page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const chapterParam = params.get("chapter");
+    const subjectParam = params.get("subject");
+    const gradeParam = params.get("grade");
+    const qParam = params.get("q");
+    if (chapterParam) setSelectedChapter(decodeURIComponent(chapterParam));
+    if (subjectParam) setSelectedSubject(decodeURIComponent(subjectParam));
+    if (gradeParam) setSelectedGrade(gradeParam);
+    if (qParam) setInput(decodeURIComponent(qParam));
+  }, [location]);
 
   const { data: conversations, isLoading: isLoadingList } = useListOpenaiConversations();
   const { data: activeConversation, isLoading: isLoadingChat } = useGetOpenaiConversation(
@@ -85,7 +115,16 @@ export default function Tutor() {
     setIsStreaming(true);
     setStreamedResponse("");
 
-    // Optimistically update UI
+    // Build contextual message with grade/subject/chapter if set
+    const contextParts: string[] = [];
+    if (selectedGrade) contextParts.push(`Class: ${selectedGrade}`);
+    if (selectedSubject) contextParts.push(`Subject: ${selectedSubject}`);
+    if (selectedChapter) contextParts.push(`Chapter: ${selectedChapter}`);
+    const contextualMessage = contextParts.length > 0
+      ? `${contextParts.join("\n")}\n\nStudent question: ${messageText}`
+      : messageText;
+
+    // Optimistically update UI — show the user's original text (not the context-wrapped version)
     const tempUserMessage = {
       id: Date.now(),
       conversationId: activeConversationId,
@@ -107,7 +146,7 @@ export default function Tutor() {
       const response = await fetch(`${BASE_URL}/api/openai/conversations/${activeConversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: messageText }),
+        body: JSON.stringify({ content: contextualMessage }),
       });
 
       if (!response.ok) throw new Error("Failed to send message");
@@ -224,9 +263,9 @@ export default function Tutor() {
           {!activeConversationId ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
               <Bot className="h-16 w-16 text-primary/20 mb-4" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">Your CBSE AI Tutor</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">AI Tutor for CBSE Classes 9–12</h2>
               <p className="text-muted-foreground max-w-md">
-                Ask me any questions about your syllabus, request explanations for tough concepts, or ask for practice problems.
+                Ask doubts by class, subject, and chapter. Get NCERT-based explanations, step-by-step solutions, revision help, and exam-oriented answers.
               </p>
             </div>
           ) : isLoadingChat ? (
@@ -282,15 +321,65 @@ export default function Tutor() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t">
-          <form 
+        <div className="p-4 bg-white border-t space-y-3">
+          {/* Context selectors */}
+          <div className="max-w-3xl mx-auto flex flex-wrap gap-2">
+            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <SelectTrigger className="w-28 h-8 text-xs rounded-full bg-muted/30 border-muted-foreground/20">
+                <SelectValue placeholder="Grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADES.map(g => (
+                  <SelectItem key={g} value={String(g)}>Class {g}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              placeholder="Subject (e.g. Science)"
+              className="w-40 h-8 text-xs rounded-full bg-muted/30 border-muted-foreground/20"
+            />
+            <Input
+              value={selectedChapter}
+              onChange={(e) => setSelectedChapter(e.target.value)}
+              placeholder="Chapter (e.g. Light)"
+              className="w-44 h-8 text-xs rounded-full bg-muted/30 border-muted-foreground/20"
+            />
+            {(selectedGrade || selectedSubject || selectedChapter) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs rounded-full text-muted-foreground"
+                onClick={() => { setSelectedGrade(""); setSelectedSubject(""); setSelectedChapter(""); }}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {/* Quick prompts */}
+          <div className="max-w-3xl mx-auto flex flex-wrap gap-2">
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => setInput(prompt)}
+                className="text-xs px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Message input */}
+          <form
             onSubmit={sendMessage}
             className="max-w-3xl mx-auto relative flex items-center"
           >
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your tutor anything..."
+              placeholder="Ask: Class 10 Science, Light chapter — explain reflection"
               className="pr-14 py-6 text-base rounded-full bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary shadow-inner"
               disabled={!activeConversationId || isStreaming}
             />
@@ -303,7 +392,7 @@ export default function Tutor() {
               {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 ml-0.5" />}
             </Button>
           </form>
-          <div className="text-center text-xs text-muted-foreground mt-3 flex items-center justify-center gap-1">
+          <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
             <AlertCircle className="h-3 w-3" /> AI can make mistakes. Verify important facts with your textbook.
           </div>
         </div>

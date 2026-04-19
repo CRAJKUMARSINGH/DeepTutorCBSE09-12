@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useGetDashboard, useGetContentStats } from "@workspace/api-client-react";
-import { BookOpen, FileText, CheckCircle2, ArrowRight, BookMarked, Activity, ChevronRight, Trophy, Sparkles, LayoutPanelLeft } from "lucide-react";
+import { BookOpen, FileText, CheckCircle2, ArrowRight, BookMarked, Activity, ChevronRight, Trophy, Sparkles, LayoutPanelLeft, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,10 +30,22 @@ export default function Home() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <section className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-        <h1 className="text-4xl font-bold tracking-tight text-primary mb-3">Welcome back!</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-primary mb-3">DeepTutor: Your AI Tutor for CBSE Classes 9–12</h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
-          Your CBSE study companion is ready. Pick up where you left off or start a new chapter today.
+          Ask doubts, learn chapter-by-chapter, get NCERT-focused explanations, solve practice questions, and prepare smarter for exams.
         </p>
+        <div className="flex flex-wrap gap-3 mt-6">
+          <Link href="/">
+            <Button className="gap-2 shadow-sm">
+              <MessageSquare className="h-4 w-4" /> Start AI Tutoring
+            </Button>
+          </Link>
+          <Link href="/subjects">
+            <Button variant="outline" className="gap-2">
+              <BookOpen className="h-4 w-4" /> Browse Subjects
+            </Button>
+          </Link>
+        </div>
         {completedCount > 0 && (
           <div className="mt-5 space-y-2 max-w-sm">
             <div className="flex justify-between text-sm font-semibold text-primary">

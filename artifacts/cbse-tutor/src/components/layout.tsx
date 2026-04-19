@@ -6,9 +6,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: Home },
+    { href: "/", label: "AI Tutor", icon: MessageSquare },
+    { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/subjects", label: "Subjects", icon: BookOpen },
-    { href: "/tutor", label: "AI Tutor", icon: MessageSquare },
   ];
 
   return (
@@ -16,8 +16,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center px-4">
           <div className="flex items-center gap-2 font-bold text-xl text-primary tracking-tight font-display mr-8">
-            <BookOpen className="h-6 w-6" />
-            CBSE Guide
+            <MessageSquare className="h-6 w-6" />
+            DeepTutor CBSE 9–12
           </div>
           
           <nav className="flex items-center gap-1">
